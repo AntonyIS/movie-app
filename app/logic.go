@@ -2,7 +2,9 @@ package app
 
 import (
 	"errors"
+	"strconv"
 
+	errs "github.com/pkg/errors"
 	"github.com/teris-io/shortid"
 )
 
@@ -61,7 +63,11 @@ func (cSvc *characterService) DeleteCharacter(id string) error {
 }
 
 func (mSvc *movieService) CreateMovie(m *Movie) (*Movie, error) {
-	m.EpisodeID = shortid.MustGenerate()
+	id, err := strconv.Atoi(shortid.MustGenerate())
+	if err != nil {
+		return errs.Wrap(ErrorInvalidItem, "service.Movie.CreateMovie")
+	}
+	m.EpisodeID = id
 	return mSvc.movieRepo.CreateMovie(m)
 }
 func (mSvc *movieService) GetMovies() (*[]Movie, error) {
