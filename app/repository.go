@@ -1,6 +1,6 @@
 package app
 
-type CharacterService interface {
+type CharacterRepository interface {
 	GetCharacter(id string) (*Character, error)
 	GetCharacters() (*[]Character, error)
 	CreateCharacter(c *Character) (*Character, error)
@@ -8,7 +8,7 @@ type CharacterService interface {
 	DeleteCharacter(id string) error
 }
 
-type MovieService interface {
+type MovieRepository interface {
 	GetMovie(id string) (*Movie, error)
 	GetMovies() (*[]Movie, error)
 	CreateMovie(c *Movie) (*Movie, error)
@@ -16,7 +16,7 @@ type MovieService interface {
 	DeleteMovie(id string) error
 }
 
-type CommentService interface {
+type CommentRepository interface {
 	GetComment(id string) (*Comment, error)
 	GetComments() (*[]Comment, error)
 	CreateComment(c *Comment) (*Comment, error)
