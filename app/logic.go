@@ -1,14 +1,9 @@
 package app
 
 import (
-	"errors"
 	"strconv"
 
-<<<<<<< HEAD
-	errs "github.com/pkg/errors"
-=======
 	"github.com/pkg/errors"
->>>>>>> development
 	"github.com/teris-io/shortid"
 )
 
@@ -28,19 +23,19 @@ type commentService struct {
 	commentRepo CommentRepository
 }
 
-func NewCharacterRepository(characterRepo CharacterRepository) CharacterService {
+func NewCharacterService(characterRepo CharacterRepository) CharacterService {
 	return &characterService{
 		characterRepo,
 	}
 }
 
-func NewMovieRepository(movieRepo MovieRepository) MovieService {
+func NewMovieService(movieRepo MovieRepository) MovieService {
 	return &movieService{
 		movieRepo,
 	}
 }
 
-func NewcommentRepository(commentRepo CommentRepository) CommentService {
+func NewcommentService(commentRepo CommentRepository) CommentService {
 	return &commentService{
 		commentRepo,
 	}
@@ -58,8 +53,8 @@ func (cSvc *characterService) GetCharacter(id string) (*Character, error) {
 	return cSvc.characterRepo.GetCharacter(id)
 }
 
-func (cSvc *characterService) UpdateCharacter(id string) (*Character, error) {
-	return cSvc.characterRepo.UpdateCharacter(id)
+func (cSvc *characterService) UpdateCharacter(c *Character) (*Character, error) {
+	return cSvc.characterRepo.UpdateCharacter(c)
 }
 
 func (cSvc *characterService) DeleteCharacter(id string) error {
@@ -69,11 +64,7 @@ func (cSvc *characterService) DeleteCharacter(id string) error {
 func (mSvc *movieService) CreateMovie(m *Movie) (*Movie, error) {
 	id, err := strconv.Atoi(shortid.MustGenerate())
 	if err != nil {
-<<<<<<< HEAD
-		return errs.Wrap(ErrorInvalidItem, "service.Movie.CreateMovie")
-=======
-		return nil, errors.Wrap(app.ErrorInvalidItem, "repository.Todo.Update")
->>>>>>> development
+		return nil, errors.Wrap(ErrorInvalidItem, "repository.Todo.Update")
 	}
 	m.EpisodeID = id
 	return mSvc.movieRepo.CreateMovie(m)
@@ -86,8 +77,8 @@ func (mSvc *movieService) GetMovie(id string) (*Movie, error) {
 	return mSvc.movieRepo.GetMovie(id)
 }
 
-func (mSvc *movieService) UpdateMovie(id string) (*Movie, error) {
-	return mSvc.movieRepo.UpdateMovie(id)
+func (mSvc *movieService) UpdateMovie(m *Movie) (*Movie, error) {
+	return mSvc.movieRepo.UpdateMovie(m)
 }
 
 func (mSvc *movieService) DeleteMovie(id string) error {
@@ -99,7 +90,7 @@ func (cSvc *commentService) CreateComment(m *Comment) (*Comment, error) {
 	return cSvc.commentRepo.CreateComment(m)
 }
 func (cSvc *commentService) GetComments() (*[]Comment, error) {
-	return cSvc.GetComments()
+	return cSvc.commentRepo.GetComments()
 }
 
 func (cSvc *commentService) GetComment(id string) (*Comment, error) {
