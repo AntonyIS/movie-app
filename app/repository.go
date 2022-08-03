@@ -20,6 +20,6 @@ type CommentRepository interface {
 	GetComment(id string) (*Comment, error)
 	GetComments() (*[]Comment, error)
 	CreateComment(c *Comment) (*Comment, error)
-	UpdateComment(id string) (*Comment, error)
+	UpdateComment(c *Comment) (*Comment, error)
 	DeleteComment(id string) error
 }
