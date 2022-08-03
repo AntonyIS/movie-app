@@ -99,27 +99,27 @@ func (r redisRepository) GetComments() (*[]app.Comment, error) {
 	return &Comments, nil
 }
 
-func (r redisRepository) Updatecomment(comment *app.Comment) (*app.Comment, error) {
+func (r redisRepository) UpdateComment(c *app.Comment) (*app.Comment, error) {
 	comments, err := r.client.HGetAll("comments").Result()
 
 	if err != nil {
-		return nil, errors.Wrap(app.ErrorInvalidItem, "repository.Updatecomment.Update")
+		return nil, errors.Wrap(app.ErrorInvalidItem, "repository.UpdateComment.Update")
 	}
 	res := &app.Comment{}
-	err = json.Unmarshal([]byte(comments[comment.CommentID]), res)
+	err = json.Unmarshal([]byte(comments[c.CommentID]), res)
 
 	if err != nil {
-		return nil, errors.Wrap(app.ErrorInvalidItem, "repository.Updatecomment.Update")
+		return nil, errors.Wrap(app.ErrorInvalidItem, "repository.UpdateComment.Update")
 	}
 
-	res.Message = comment.Message
+	res.Message = c.Message
 
 	rawmsg, err := json.Marshal(res)
 	if err != nil {
-		return nil, errors.Wrap(app.ErrorInvalidItem, "repository.Updatecomment.Update")
+		return nil, errors.Wrap(app.ErrorInvalidItem, "repository.UpdateComment.Update")
 	}
 
-	found, err := r.client.HSet("comments", comment.CommentID, rawmsg).Result()
+	found, err := r.client.HSet("comments", c.CommentID, rawmsg).Result()
 
 	if err != nil {
 		return nil, errors.Wrap(err, "repository.Redirect.Store")
