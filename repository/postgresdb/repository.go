@@ -8,6 +8,7 @@ import (
 	"github.com/AntonyIS/movie-app/app"
 	"github.com/jinzhu/gorm"
 	"github.com/joho/godotenv"
+	_ "github.com/lib/pq" // Postgres golang driver
 	"github.com/pkg/errors"
 )
 
@@ -16,15 +17,15 @@ type postgresRepository struct {
 	TableName string
 }
 
-func PostgresDB() *gorm.DB {
+func postgresDB() *gorm.DB {
 	err := godotenv.Load(".env")
 
 	if err != nil {
 		log.Fatalf("Error loading .env file")
 	}
 	host := os.Getenv("HOST")
-	port := os.Getenv("PORT")
-	user := os.Getenv("USER")
+	port := "5432"
+	user := "postgres"
 	password := os.Getenv("PASSWORD")
 	dbname := os.Getenv("DBNAME")
 
@@ -35,57 +36,51 @@ func PostgresDB() *gorm.DB {
 	}
 
 	db.LogMode(false)
-	db.AutoMigrate(app.Character{})
+	db.AutoMigrate(app.Comment{})
 
 	return db
 
 }
 
-func NewRepostory() app.CharacterRepository {
+func NewRepostory() app.CommentRepository {
 	return postgresRepository{
-		DB: PostgresDB(),
+		DB: postgresDB(),
 	}
 }
 
-func (p postgresRepository) CreateCharacter(c *app.Character) (*app.Character, error) {
+func (p postgresRepository) CreateComment(c *app.Comment) (*app.Comment, error) {
 	if err := p.DB.Create(&c).Error; err != nil {
-		return nil, errors.Wrap(err, "repository.Character.CreateCharacter")
+		return nil, err
 	}
 	return c, nil
 }
 
-func (p postgresRepository) GetCharacter(id string) (*app.Character, error) {
-	var character app.Character
-	response := p.DB.First(&character, "id= ?", id)
-	if response.RowsAffected == 0 {
-		return nil, errors.Wrap(errors.New("character not found"), "repository.Character.CreateCharacter")
-	}
-
-	return &character, nil
+func (p postgresRepository) GetComment(id string) (*app.Comment, error) {
+	var comment app.Comment
+	p.DB.First(&comment, id)
+	return &comment, nil
 }
 
-func (p postgresRepository) GetCharacters() (*[]app.Character, error) {
-	characters := []app.Character{}
-	if result := p.DB.Find(&characters); result.Error != nil {
-		return nil, errors.Wrap(result.Error, "repository.Character.GetCharacters")
-	}
-	return &characters, nil
+func (p postgresRepository) GetComments() (*[]app.Comment, error) {
+	comments := []app.Comment{}
+	p.DB.Find(&comments)
+	return &comments, nil
 }
 
-func (p postgresRepository) UpdateCharacter(c *app.Character) (*app.Character, error) {
+func (p postgresRepository) UpdateComment(c *app.Comment) (*app.Comment, error) {
 	if result := p.DB.Save(c); result.Error != nil {
-		return nil, errors.Wrap(result.Error, "repository.Character.UpdateCharacter")
+		return nil, errors.Wrap(result.Error, "repository.Comment.UpdateComment")
 	}
 	return c, nil
 }
 
-func (p postgresRepository) DeleteCharacter(id string) error {
-	character := app.Character{}
-	if result := p.DB.Find(&character); result.Error != nil {
-		return errors.Wrap(result.Error, "repository.Character.Deletecharacter")
+func (p postgresRepository) DeleteComment(id string) error {
+	comment := app.Comment{}
+	if result := p.DB.Find(&comment); result.Error != nil {
+		return errors.Wrap(result.Error, "repository.Comment.DeleteComment")
 	}
-	if err := p.DB.Where("id = ? ", id).Delete(&character).Error; err != nil {
-		return errors.Wrap(err, "repository.Character.Deletecharacter")
+	if err := p.DB.Where("id = ? ", id).Delete(&comment).Error; err != nil {
+		return errors.Wrap(err, "repository.Comment.DeleteComment")
 	}
 	return nil
 }

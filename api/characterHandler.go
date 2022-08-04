@@ -42,20 +42,20 @@ func (h *characterHandler) CreateCharacter(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusCreated, gin.H{
-		"Character": Character,
+		"character": Character,
 	})
 }
 
 func (h *characterHandler) GetCharacters(c *gin.Context) {
-	Characters, err := h.characterService.GetCharacters()
+	characters, err := h.characterService.GetCharacters()
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error": err,
+			"characters": characters,
 		})
 		return
 	}
 	c.JSON(http.StatusCreated, gin.H{
-		"Characters": Characters,
+		"characters": characters,
 	})
 }
 

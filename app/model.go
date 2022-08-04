@@ -1,7 +1,13 @@
 package app
 
+import (
+	"github.com/jinzhu/gorm"
+)
+
+var DB *gorm.DB
+
 type Character struct {
-	ID           string   `json:"character_id"`
+	ID           string   `json:"id"`
 	Name         string   `json:"name"`
 	Height       string   `json:"height"`
 	Mass         string   `json:"mass"`
@@ -38,9 +44,9 @@ type Movie struct {
 }
 
 type Comment struct {
-	CommentID   string `json:"comment_id"`
-	Message     string `json:"message"`
-	CommentorIP string `json:"commentor_ip"`
-	Created     string `json:"created"`
-	Edited      string `json:"edited"`
+	CommentID   string `json:"comment_id" gorm:"type:text"`
+	Message     string `json:"message" gorm:"type:text"`
+	CommentorIP string `json:"commentor_ip" gorm:"type:text"`
+	Created     string `json:"created" gorm:"type:text"`
+	Edited      string `json:"edited" gorm:"type:text"`
 }

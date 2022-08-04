@@ -2,6 +2,7 @@ package redis
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/AntonyIS/movie-app/app"
 	"github.com/go-redis/redis"
@@ -27,114 +28,161 @@ func newRedisClient(redisURL string) (*redis.Client, error) {
 	return client, nil
 }
 
-func NewRedisRepository(redisURL string) (app.CommentRepository, error) {
+func NewRedisRepository(redisURL string) (app.CharacterRepository, error) {
 	repo := &redisRepository{}
 
 	client, err := newRedisClient(redisURL)
 
 	if err != nil {
-		return nil, errors.Wrap(err, "comment.NewRedisReposiory")
+		return nil, errors.Wrap(err, "character.NewRedisReposiory")
 	}
 
 	repo.client = client
 	return repo, nil
 }
 
-func (r redisRepository) CreateComment(c *app.Comment) (*app.Comment, error) {
+func (r redisRepository) CreateCharacter(c *app.Character) (*app.Character, error) {
 
 	data := map[string]interface{}{
-		"comment_id":   c.CommentID,
-		"message":      c.Message,
-		"commentor_ip": c.CommentorIP,
-	}
-	rawmsg, err := json.Marshal(data)
-	if err != nil {
-		return nil, errors.Wrap(err, "repository.Comment.Create")
+		"id":         c.ID,
+		"name":       c.Name,
+		"height":     c.Height,
+		"mass":       c.Mass,
+		"hair_color": c.HairColor,
+		"skin_color": c.SkinColor,
+		"eye_color":  c.EyeColor,
+		"birth_year": c.BirthYear,
+		"gender":     c.Gender,
+		"homeworld":  c.Homeworld,
+		"films":      c.FilmURLs,
+		"species":    c.SpeciesURLs,
+		"vehicles":   c.VehicleURLs,
+		"starships":  c.StarshipURLs,
+		"created":    c.Created,
+		"edited":     c.Edited,
+		"url":        c.URL,
 	}
 
-	_, err = r.client.HSet("comments", c.CommentID, rawmsg).Result()
+	key := r.generateKey(c.ID)
 
+	_, err := r.client.HMSet(key, data).Result()
 	if err != nil {
-		return nil, errors.Wrap(err, "repository.Comment.Create")
+		return nil, err
 	}
 
 	return c, nil
 }
 
-func (r redisRepository) GetComment(id string) (*app.Comment, error) {
-	comments, err := r.client.HGetAll("comments").Result()
+func (r redisRepository) GetCharacter(id string) (*app.Character, error) {
+
+	key := r.generateKey(id)
+	data, err := r.client.HGetAll(key).Result()
 
 	if err != nil {
-		return nil, errors.Wrap(app.ErrorInvalidItem, "repository.Comment.GetComment")
+		return nil, err
 	}
-	comment := &app.Comment{}
-	err = json.Unmarshal([]byte(comments[id]), comment)
-	if err != nil {
-		return nil, errors.Wrap(app.ErrorInvalidItem, "repository.Comment.GetComment")
+	if len(data) == 0 {
+		return nil, err
+	}
+	c := app.Character{}
+	m2 := make(map[string]interface{}, len(data))
+	for k, v := range data {
+		m2[k] = v
 	}
 
-	return comment, nil
+	c.ID = m2["id"].(string)
+	c.Name = m2["name"].(string)
+	c.Height = m2["height"].(string)
+	c.Mass = m2["mass"].(string)
+	c.HairColor = m2["hair_color"].(string)
+	c.SkinColor = m2["skin_color"].(string)
+	c.EyeColor = m2["eye_color"].(string)
+	c.BirthYear = m2["birth_year"].(string)
+	c.Gender = m2["gender"].(string)
+	c.Homeworld = m2["homeworld"].(string)
+	c.FilmURLs = m2["films"].([]string)
+	c.SpeciesURLs = m2["species"].([]string)
+	c.VehicleURLs = m2["vehicles"].([]string)
+	c.StarshipURLs = m2["starships"].([]string)
+	c.Created = m2["created"].(string)
+	c.Edited = m2["edited"].(string)
+	c.URL = m2["url"].(string)
+
+	return &c, nil
+
 }
 
-func (r redisRepository) GetComments() (*[]app.Comment, error) {
-	data, err := r.client.HGetAll("Comments").Result()
-	Comments := []app.Comment{}
+func (r redisRepository) GetCharacters() (*[]app.Character, error) {
+	data, err := r.client.HGetAll("characters").Result()
+	characters := []app.Character{}
 	if err != nil {
 		return nil, err
 	}
 
 	if len(data) == 0 {
-		return &Comments, nil
+		return &characters, nil
 	}
 
-	for _, Comment := range data {
-		res := app.Comment{}
-		err := json.Unmarshal([]byte(Comment), &res)
+	for _, Character := range data {
+		res := app.Character{}
+		err := json.Unmarshal([]byte(Character), &res)
 		if err != nil {
-			return nil, errors.Wrap(app.ErrorInvalidItem, "repository.Comment.GetComments")
+			return nil, errors.Wrap(app.ErrorInvalidItem, "repository.Character.GetCharacters")
 		}
-		Comments = append(Comments, res)
+		characters = append(characters, res)
 	}
 
-	return &Comments, nil
+	return &characters, nil
 }
 
-func (r redisRepository) UpdateComment(c *app.Comment) (*app.Comment, error) {
-	comments, err := r.client.HGetAll("comments").Result()
+func (r redisRepository) UpdateCharacter(c *app.Character) (*app.Character, error) {
+	key := r.generateKey(c.ID)
+	data, err := r.client.HGetAll(key).Result()
 
 	if err != nil {
-		return nil, errors.Wrap(app.ErrorInvalidItem, "repository.UpdateComment.Update")
+		return nil, err
 	}
-	res := &app.Comment{}
-	err = json.Unmarshal([]byte(comments[c.CommentID]), res)
+	if len(data) == 0 {
+		return nil, err
+	}
 
+	m2 := make(map[string]interface{}, len(data))
+	for k, v := range data {
+		m2[k] = v
+	}
+	m2["name"] = c.Name
+	m2["height"] = c.Height
+	m2["mass"] = c.Mass
+	m2["hair_color"] = c.HairColor
+	m2["skin_color"] = c.SkinColor
+	m2["eye_color"] = c.EyeColor
+	m2["birth_year"] = c.BirthYear
+	m2["gender"] = c.Gender
+	m2["films"] = c.FilmURLs
+	m2["species"] = c.SpeciesURLs
+	m2["vehicles"] = c.VehicleURLs
+	m2["starships"] = c.StarshipURLs
+	m2["created"] = c.Created
+	m2["edited"] = c.Edited
+	m2["url"] = c.URL
+
+	_, err = r.client.HMSet(key, m2).Result()
 	if err != nil {
-		return nil, errors.Wrap(app.ErrorInvalidItem, "repository.UpdateComment.Update")
+		return nil, err
 	}
 
-	res.Message = c.Message
-
-	rawmsg, err := json.Marshal(res)
-	if err != nil {
-		return nil, errors.Wrap(app.ErrorInvalidItem, "repository.UpdateComment.Update")
-	}
-
-	found, err := r.client.HSet("comments", c.CommentID, rawmsg).Result()
-
-	if err != nil {
-		return nil, errors.Wrap(err, "repository.Redirect.Store")
-	}
-	if found {
-		return res, nil
-	}
-	return nil, nil
+	return c, nil
 
 }
 
-func (r redisRepository) DeleteComment(id string) error {
-	_, err := r.client.HDel("comments", id).Result()
+func (r redisRepository) DeleteCharacter(id string) error {
+	key := r.generateKey(id)
+	_, err := r.client.HDel(key).Result()
 	if err != nil {
-		return errors.Wrap(err, "repository.Comment.DeleteComment")
+		return err
 	}
 	return nil
+}
+func (r *redisRepository) generateKey(code string) string {
+	return fmt.Sprintf("characters:%s", code)
 }
