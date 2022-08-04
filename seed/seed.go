@@ -48,7 +48,6 @@ func PostCharacters() {
 		for _, e := range x {
 			d := e.(map[string]interface{})
 			var character app.Character
-
 			character.ID = d["id"].(string)
 			character.Name = d["name"].(string)
 			character.Height = d["height"].(string)
