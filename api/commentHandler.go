@@ -63,8 +63,9 @@ func (h *commentHandler) GetComment(c *gin.Context) {
 	id := c.Param("id")
 	comment, err := h.commentService.GetComment(id)
 	if err != nil {
+
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error": err,
+			"comment": err,
 		})
 		return
 	}
