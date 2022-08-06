@@ -23,13 +23,14 @@ func main() {
 	characterService := app.NewCharacterService(characterRepo)
 	characterHandler := handler.NewCharacterHandler(characterService)
 
-	seed.PostCharacters()
 	router := gin.Default()
+
 	router.GET("/", func(c *gin.Context) {
 		c.JSON(http.StatusCreated, gin.H{
-			"message": "Welcome to star wars API",
+			"message": seed.PostCharacters(),
 		})
 	})
+
 	router.POST("/comments/", commentHandler.CreateComment)
 	router.GET("/comments/", commentHandler.GetComments)
 	router.GET("/comments/:id", commentHandler.GetComment)

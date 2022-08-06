@@ -1,6 +1,7 @@
 package app
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/pkg/errors"
@@ -43,6 +44,10 @@ func NewcommentService(commentRepo CommentRepository) CommentService {
 
 func (cSvc *characterService) CreateCharacter(c *Character) (*Character, error) {
 	c.ID = shortid.MustGenerate()
+	fmt.Println(c)
+	fmt.Println()
+	fmt.Println()
+	fmt.Println()
 	return cSvc.characterRepo.CreateCharacter(c)
 }
 func (cSvc *characterService) GetCharacters() (*[]Character, error) {

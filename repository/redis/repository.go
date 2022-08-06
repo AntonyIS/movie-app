@@ -14,7 +14,6 @@ type redisRepository struct {
 }
 
 func newRedisClient(redisURL string) (*redis.Client, error) {
-
 	opts, err := redis.ParseURL(redisURL)
 	if err != nil {
 		return nil, err
@@ -24,25 +23,20 @@ func newRedisClient(redisURL string) (*redis.Client, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	return client, nil
 }
 
 func NewRedisRepository(redisURL string) (app.CharacterRepository, error) {
 	repo := &redisRepository{}
-
 	client, err := newRedisClient(redisURL)
-
 	if err != nil {
 		return nil, errors.Wrap(err, "character.NewRedisReposiory")
 	}
-
 	repo.client = client
 	return repo, nil
 }
 
 func (r redisRepository) CreateCharacter(c *app.Character) (*app.Character, error) {
-
 	data := map[string]interface{}{
 		"id":         c.ID,
 		"name":       c.Name,
@@ -62,21 +56,44 @@ func (r redisRepository) CreateCharacter(c *app.Character) (*app.Character, erro
 		"edited":     c.Edited,
 		"url":        c.URL,
 	}
+	defer r.client.Close()
+
+	charSlice := make(map[string]interface{})
+	val, err := r.client.Get("characters").Result()
+	if err != nil {
+		err = r.client.Set("characters", charSlice, 0).Err()
+		if err != nil {
+			fmt.Println(err, "EEEEEErSSZDSEFVCSDEFDCSDFc")
+		}
+	}
+
+	fmt.Println(val, "EEEEEEEEEEEEEEEEEE")
+
+	// err := rdb.Set(ctx, "characters", "value", 0).Err()
+	// if err != nil {
+	// 	panic(err)
+	// }
 
 	key := r.generateKey(c.ID)
-
-	_, err := r.client.HMSet(key, data).Result()
+	// fmt.Println(key)
+	_, err = r.client.HMSet(key, data).Result()
 	if err != nil {
 		return nil, err
 	}
 
+	// v, err := r.client.HGetAll(key).Result()
+	// if err != nil {
+
+	// 	return nil, err
+	// }
+	// fmt.Println(v)
 	return c, nil
 }
 
 func (r redisRepository) GetCharacter(id string) (*app.Character, error) {
 
-	key := r.generateKey(id)
-	data, err := r.client.HGetAll(key).Result()
+	// key := r.generateKey(id)
+	data, err := r.client.HGetAll("characters:wXveCwz4g").Result()
 
 	if err != nil {
 		return nil, err
@@ -113,7 +130,17 @@ func (r redisRepository) GetCharacter(id string) (*app.Character, error) {
 }
 
 func (r redisRepository) GetCharacters() (*[]app.Character, error) {
-	data, err := r.client.HGetAll("characters").Result()
+	data, err := r.client.HGetAll("characters:").Result()
+	if err != nil {
+
+		return nil, err
+	}
+	v, err := r.client.HGetAll("key").Result()
+	if err != nil {
+
+		return nil, err
+	}
+	fmt.Println(v)
 	characters := []app.Character{}
 	if err != nil {
 		return nil, err
@@ -183,6 +210,6 @@ func (r redisRepository) DeleteCharacter(id string) error {
 	}
 	return nil
 }
-func (r *redisRepository) generateKey(code string) string {
-	return fmt.Sprintf("characters:%s", code)
+func (r *redisRepository) generateKey(id string) string {
+	return fmt.Sprintf("characters:%s", id)
 }

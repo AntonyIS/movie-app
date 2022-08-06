@@ -10,9 +10,11 @@ import (
 
 	"github.com/AntonyIS/movie-app/app"
 	"github.com/AntonyIS/movie-app/repository/redis"
+	"github.com/teris-io/shortid"
 )
 
-func PostCharacters() {
+func PostCharacters() interface{} {
+
 	url := "https://swapi.dev/api/people"
 
 	response, err := http.Get(url)
@@ -35,42 +37,48 @@ func PostCharacters() {
 	}
 
 	d := jsonMap["results"]
-
+	results := d
 	repo, err := redis.NewRedisRepository("redis://localhost:6379")
 
 	if err != nil {
 		log.Fatal("redis server not connected: ", err)
 	}
+	test := d.([]interface{})
 
-	switch x := d.(type) {
-	case []interface{}:
+	for _, v := range test {
+		rep := v.(map[string]interface{})
 
-		for _, e := range x {
-			d := e.(map[string]interface{})
-			var character app.Character
-			character.ID = d["id"].(string)
-			character.Name = d["name"].(string)
-			character.Height = d["height"].(string)
-			character.Mass = d["mass"].(string)
-			character.HairColor = d["hair_color"].(string)
-			character.SkinColor = d["skin_color"].(string)
-			character.EyeColor = d["eye_color"].(string)
-			character.BirthYear = d["birth_year"].(string)
-			character.Gender = d["gender"].(string)
-			character.Homeworld = d["homeworld"].(string)
-			character.FilmURLs = d["films"].([]string)
-			character.SpeciesURLs = d["species"].([]string)
-			character.VehicleURLs = d["vehicles"].([]string)
-			character.StarshipURLs = d["starships"].([]string)
-			character.Created = d["created"].(string)
-			character.Edited = d["edited"].(string)
-			character.URL = d["url"].(string)
-			repo.CreateCharacter(&character)
+		var c app.Character
+		c.ID = shortid.MustGenerate()
+		c.Name = rep["name"].(string)
+		c.Height = rep["height"].(string)
+		c.Mass = rep["mass"].(string)
+		c.HairColor = rep["hair_color"].(string)
+		c.SkinColor = rep["skin_color"].(string)
+		c.EyeColor = rep["eye_color"].(string)
+		c.BirthYear = rep["birth_year"].(string)
+		c.Gender = rep["gender"].(string)
+		c.Homeworld = rep["homeworld"].(string)
+		c.FilmURLs = marshal(rep["films"].([]interface{}))
+		c.SpeciesURLs = marshal(rep["species"].([]interface{}))
+		c.VehicleURLs = marshal(rep["vehicles"].([]interface{}))
+		c.StarshipURLs = marshal(rep["starships"].([]interface{}))
+		c.Created = rep["created"].(string)
+		c.Edited = rep["edited"].(string)
+		c.URL = rep["url"].(string)
 
-		}
-		fmt.Println("Done seeding")
-	default:
-		fmt.Printf("I don't know how to handle %T\n", d)
+		repo.CreateCharacter(&c)
+
 	}
+
+	return results
+}
+
+func marshal(d []interface{}) []string {
+	s := []string{}
+	for _, k := range d {
+		s = append(s, k.(string))
+	}
+	return s
 
 }
