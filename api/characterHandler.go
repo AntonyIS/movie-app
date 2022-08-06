@@ -54,14 +54,20 @@ func (h *characterHandler) GetCharacters(c *gin.Context) {
 		})
 		return
 	}
-	c.JSON(http.StatusCreated, gin.H{
+	c.JSON(http.StatusOK, gin.H{
 		"characters": characters,
 	})
 }
 
 func (h *characterHandler) GetCharacter(c *gin.Context) {
 	id := c.Param("id")
-	Character, err := h.characterService.GetCharacter(id)
+	character, err := h.characterService.GetCharacter(id)
+	if character == nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"message": "character not found",
+		})
+		return
+	}
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": err,
@@ -69,7 +75,7 @@ func (h *characterHandler) GetCharacter(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusCreated, gin.H{
-		"Characters": Character,
+		"characters": character,
 	})
 }
 

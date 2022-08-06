@@ -3,6 +3,7 @@ package redis
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 
 	"github.com/AntonyIS/movie-app/app"
 	"github.com/go-redis/redis"
@@ -10,10 +11,10 @@ import (
 )
 
 type redisRepository struct {
-	client *redis.Client
+	Client *redis.Client
 }
 
-func newRedisClient(redisURL string) (*redis.Client, error) {
+func NewRedisClient(redisURL string) (*redis.Client, error) {
 	opts, err := redis.ParseURL(redisURL)
 	if err != nil {
 		return nil, err
@@ -28,188 +29,125 @@ func newRedisClient(redisURL string) (*redis.Client, error) {
 
 func NewRedisRepository(redisURL string) (app.CharacterRepository, error) {
 	repo := &redisRepository{}
-	client, err := newRedisClient(redisURL)
+	client, err := NewRedisClient(redisURL)
 	if err != nil {
 		return nil, errors.Wrap(err, "character.NewRedisReposiory")
 	}
-	repo.client = client
+	repo.Client = client
 	return repo, nil
 }
 
 func (r redisRepository) CreateCharacter(c *app.Character) (*app.Character, error) {
-	data := map[string]interface{}{
-		"id":         c.ID,
-		"name":       c.Name,
-		"height":     c.Height,
-		"mass":       c.Mass,
-		"hair_color": c.HairColor,
-		"skin_color": c.SkinColor,
-		"eye_color":  c.EyeColor,
-		"birth_year": c.BirthYear,
-		"gender":     c.Gender,
-		"homeworld":  c.Homeworld,
-		"films":      c.FilmURLs,
-		"species":    c.SpeciesURLs,
-		"vehicles":   c.VehicleURLs,
-		"starships":  c.StarshipURLs,
-		"created":    c.Created,
-		"edited":     c.Edited,
-		"url":        c.URL,
-	}
-	defer r.client.Close()
 
-	charSlice := make(map[string]interface{})
-	val, err := r.client.Get("characters").Result()
+	json, err := json.Marshal(c)
 	if err != nil {
-		err = r.client.Set("characters", charSlice, 0).Err()
-		if err != nil {
-			fmt.Println(err, "EEEEEErSSZDSEFVCSDEFDCSDFc")
-		}
+		log.Fatal("Error adding new character")
 	}
-
-	fmt.Println(val, "EEEEEEEEEEEEEEEEEE")
-
-	// err := rdb.Set(ctx, "characters", "value", 0).Err()
-	// if err != nil {
-	// 	panic(err)
-	// }
-
-	key := r.generateKey(c.ID)
-	// fmt.Println(key)
-	_, err = r.client.HMSet(key, data).Result()
-	if err != nil {
-		return nil, err
-	}
-
-	// v, err := r.client.HGetAll(key).Result()
-	// if err != nil {
-
-	// 	return nil, err
-	// }
-	// fmt.Println(v)
+	r.Client.HSet("characters", c.ID, json)
+	defer r.Client.Close()
 	return c, nil
 }
 
 func (r redisRepository) GetCharacter(id string) (*app.Character, error) {
+	data, err := r.Client.HGet("characters", id).Result()
 
-	// key := r.generateKey(id)
-	data, err := r.client.HGetAll("characters:wXveCwz4g").Result()
+	if data == " " {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	if len(data) == 0 {
+		return nil, nil
+	}
+
+	var character app.Character
+	err = json.Unmarshal([]byte(data), &character)
 
 	if err != nil {
 		return nil, err
 	}
-	if len(data) == 0 {
-		return nil, err
-	}
-	c := app.Character{}
-	m2 := make(map[string]interface{}, len(data))
-	for k, v := range data {
-		m2[k] = v
-	}
 
-	c.ID = m2["id"].(string)
-	c.Name = m2["name"].(string)
-	c.Height = m2["height"].(string)
-	c.Mass = m2["mass"].(string)
-	c.HairColor = m2["hair_color"].(string)
-	c.SkinColor = m2["skin_color"].(string)
-	c.EyeColor = m2["eye_color"].(string)
-	c.BirthYear = m2["birth_year"].(string)
-	c.Gender = m2["gender"].(string)
-	c.Homeworld = m2["homeworld"].(string)
-	c.FilmURLs = m2["films"].([]string)
-	c.SpeciesURLs = m2["species"].([]string)
-	c.VehicleURLs = m2["vehicles"].([]string)
-	c.StarshipURLs = m2["starships"].([]string)
-	c.Created = m2["created"].(string)
-	c.Edited = m2["edited"].(string)
-	c.URL = m2["url"].(string)
-
-	return &c, nil
+	return &character, nil
 
 }
 
 func (r redisRepository) GetCharacters() (*[]app.Character, error) {
-	data, err := r.client.HGetAll("characters:").Result()
+	data, err := r.Client.HGetAll("characters").Result()
 	if err != nil {
-
 		return nil, err
 	}
-	v, err := r.client.HGetAll("key").Result()
-	if err != nil {
 
-		return nil, err
-	}
-	fmt.Println(v)
 	characters := []app.Character{}
-	if err != nil {
-		return nil, err
-	}
-
-	if len(data) == 0 {
-		return &characters, nil
-	}
-
-	for _, Character := range data {
-		res := app.Character{}
-		err := json.Unmarshal([]byte(Character), &res)
+	for _, value := range data {
+		character := app.Character{}
+		err := json.Unmarshal([]byte(value), &character)
 		if err != nil {
-			return nil, errors.Wrap(app.ErrorInvalidItem, "repository.Character.GetCharacters")
+			log.Fatal(err)
 		}
-		characters = append(characters, res)
+		characters = append(characters, character)
 	}
 
 	return &characters, nil
 }
 
 func (r redisRepository) UpdateCharacter(c *app.Character) (*app.Character, error) {
-	key := r.generateKey(c.ID)
-	data, err := r.client.HGetAll(key).Result()
 
+	data, err := r.Client.HGet("characters", c.ID).Result()
+	
 	if err != nil {
 		return nil, err
 	}
+
 	if len(data) == 0 {
-		return nil, err
+		return nil, nil
 	}
 
-	m2 := make(map[string]interface{}, len(data))
-	for k, v := range data {
-		m2[k] = v
-	}
-	m2["name"] = c.Name
-	m2["height"] = c.Height
-	m2["mass"] = c.Mass
-	m2["hair_color"] = c.HairColor
-	m2["skin_color"] = c.SkinColor
-	m2["eye_color"] = c.EyeColor
-	m2["birth_year"] = c.BirthYear
-	m2["gender"] = c.Gender
-	m2["films"] = c.FilmURLs
-	m2["species"] = c.SpeciesURLs
-	m2["vehicles"] = c.VehicleURLs
-	m2["starships"] = c.StarshipURLs
-	m2["created"] = c.Created
-	m2["edited"] = c.Edited
-	m2["url"] = c.URL
+	var character app.Character
+	err = json.Unmarshal([]byte(data), &character)
 
-	_, err = r.client.HMSet(key, m2).Result()
 	if err != nil {
 		return nil, err
 	}
 
-	return c, nil
+	character.Name = c.Name
+	character.Height = c.Height
+	character.Mass = c.Mass
+	character.HairColor = c.HairColor
+	character.SkinColor = c.SkinColor
+	character.EyeColor = c.EyeColor
+	character.BirthYear = c.BirthYear
+	character.Gender = c.Gender
+	character.Homeworld = c.Homeworld
+	character.FilmURLs = c.FilmURLs
+	character.SpeciesURLs = c.SpeciesURLs
+	character.VehicleURLs = c.VehicleURLs
+	character.StarshipURLs = c.StarshipURLs
+	character.Created = c.Created
+	character.Edited = c.Edited
+	character.URL = c.URL
+
+	json, err := json.Marshal(c)
+	if err != nil {
+		log.Fatal("Error adding new character")
+	}
+	r.Client.HSet("characters", c.ID, json)
+	return &character, nil
 
 }
 
 func (r redisRepository) DeleteCharacter(id string) error {
-	key := r.generateKey(id)
-	_, err := r.client.HDel(key).Result()
-	if err != nil {
-		return err
+	err := r.Client.HDel("characters", id)
+
+	if fmt.Sprintf("%T", err) == "IntCMD" {
+		return nil
 	}
+
+	if err != nil {
+		return nil
+	}
+
 	return nil
-}
-func (r *redisRepository) generateKey(id string) string {
-	return fmt.Sprintf("characters:%s", id)
+
 }

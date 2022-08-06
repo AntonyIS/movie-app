@@ -38,12 +38,14 @@ func PostCharacters() interface{} {
 
 	d := jsonMap["results"]
 	results := d
-	repo, err := redis.NewRedisRepository("redis://localhost:6379")
+	repo, err := redis.NewRedisClient("redis://localhost:6379")
 
 	if err != nil {
 		log.Fatal("redis server not connected: ", err)
 	}
 	test := d.([]interface{})
+
+	defer repo.Close()
 
 	for _, v := range test {
 		rep := v.(map[string]interface{})
@@ -67,7 +69,12 @@ func PostCharacters() interface{} {
 		c.Edited = rep["edited"].(string)
 		c.URL = rep["url"].(string)
 
-		repo.CreateCharacter(&c)
+		json, err := json.Marshal(c)
+		if err != nil {
+			log.Fatal("Error adding new character")
+		}
+
+		repo.HSet("characters", c.ID, json)
 
 	}
 

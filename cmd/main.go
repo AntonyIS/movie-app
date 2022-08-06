@@ -27,6 +27,11 @@ func main() {
 
 	router.GET("/", func(c *gin.Context) {
 		c.JSON(http.StatusCreated, gin.H{
+			"message": "Welcome",
+		})
+	})
+	router.GET("/characters/seed", func(c *gin.Context) {
+		c.JSON(http.StatusCreated, gin.H{
 			"message": seed.PostCharacters(),
 		})
 	})
