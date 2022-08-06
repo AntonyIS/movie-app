@@ -6,9 +6,10 @@ import (
 	"os"
 
 	"github.com/AntonyIS/movie-app/app"
+	redis "github.com/AntonyIS/movie-app/repository/redis"
 	"github.com/jinzhu/gorm"
 	"github.com/joho/godotenv"
-	_ "github.com/lib/pq" // Postgres golang driver
+	_ "github.com/lib/pq"
 	"github.com/pkg/errors"
 )
 
@@ -49,9 +50,26 @@ func NewRepostory() app.CommentRepository {
 }
 
 func (p postgresRepository) CreateComment(c *app.Comment) (*app.Comment, error) {
+	redis, err := redis.NewMovieRedisRepository("redis://localhost:6379")
+	if err != nil {
+		log.Fatal("Error ::", err)
+	}
+
+	movie, err := redis.GetMovie(c.MovieID)
+	if err != nil {
+		log.Fatal("Error ::", err)
+	}
+	movie.Comments = append(movie.Comments, c.URL)
+
+	_, err = redis.UpdateMovie(movie)
+	if err != nil {
+		log.Fatal("Error ::", err)
+	}
+
 	if err := p.DB.Create(&c).Error; err != nil {
 		return nil, err
 	}
+
 	return c, nil
 }
 

@@ -121,10 +121,10 @@ func SeedMovies() interface{} {
 		m.ID = shortid.MustGenerate()
 		m.Title = rep["title"].(string)
 		m.OpeningCrawl = rep["opening_crawl"].(string)
-		m.Comments = []app.Comment{}
+		m.Comments = []string{}
 		m.Created = rep["created"].(string)
+		m.Characters = marshal(rep["characters"].([]interface{}))
 		m.Edited = rep["edited"].(string)
-		
 
 		json, err := json.Marshal(m)
 		if err != nil {

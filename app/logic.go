@@ -1,6 +1,9 @@
 package app
 
 import (
+	"fmt"
+	"time"
+
 	"github.com/pkg/errors"
 	"github.com/teris-io/shortid"
 )
@@ -71,6 +74,12 @@ func (mSvc *movieService) GetMovies() (*[]Movie, error) {
 func (mSvc *movieService) GetMovie(id string) (*Movie, error) {
 	return mSvc.movieRepo.GetMovie(id)
 }
+func (mSvc *movieService) GetMovieComments(id string) (*[]Comment, error) {
+	return mSvc.movieRepo.GetMovieComments(id)
+}
+func (mSvc *movieService) GetMovieCharacters(id string) (*[]Character, error) {
+	return mSvc.movieRepo.GetMovieCharacters(id)
+}
 
 func (mSvc *movieService) UpdateMovie(m *Movie) (*Movie, error) {
 	return mSvc.movieRepo.UpdateMovie(m)
@@ -82,6 +91,9 @@ func (mSvc *movieService) DeleteMovie(id string) error {
 
 func (cSvc *commentService) CreateComment(m *Comment) (*Comment, error) {
 	m.CommentID = shortid.MustGenerate()
+	m.CommentorIP = shortid.MustGenerate()
+	m.Created = time.Now().UTC().Unix()
+	m.URL = fmt.Sprintf("http://%s%s", m.URL, m.CommentID)
 	return cSvc.commentRepo.CreateComment(m)
 }
 func (cSvc *commentService) GetComments() (*[]Comment, error) {

@@ -27,12 +27,13 @@ type Character struct {
 }
 
 type Movie struct {
-	ID           string    `json:"id"`
-	Title        string    `json:"title"`
-	OpeningCrawl string    `json:"opening_crawl"`
-	Comments     []Comment `json:"comments"`
-	Created      string    `json:"created"`
-	Edited       string    `json:"edited"`
+	ID           string   `json:"id"`
+	Title        string   `json:"title"`
+	OpeningCrawl string   `json:"opening_crawl"`
+	Comments     []string `json:"comments"`
+	Characters   []string `json:"characters"`
+	Created      string   `json:"created"`
+	Edited       string   `json:"edited"`
 }
 
 type Comment struct {
@@ -40,6 +41,7 @@ type Comment struct {
 	MovieID     string `json:"movie_id" gorm:"type:text"`
 	Message     string `json:"message" gorm:"type:text"`
 	CommentorIP string `json:"commentor_ip" gorm:"type:text"`
-	Created     string `json:"created" gorm:"type:text"`
-	Edited      string `json:"edited" gorm:"type:text"`
+	Created     int64  `json:"created" gorm:"type:text"`
+	Edited      int64  `json:"edited" gorm:"type:text"`
+	URL         string `json:"url"`
 }

@@ -13,6 +13,8 @@ type MovieHandler interface {
 	GetMovies(*gin.Context)
 	UpdateMovie(*gin.Context)
 	DeleteMovie(*gin.Context)
+	GetMovieComments(*gin.Context)
+	GetMovieCharacters(*gin.Context)
 }
 
 type movieHandler struct {
@@ -107,4 +109,29 @@ func (h *movieHandler) DeleteMovie(c *gin.Context) {
 		"message": "Movie deleted successfuly",
 	})
 
+}
+
+func (h *movieHandler) GetMovieComments(c *gin.Context) {
+	id := c.Param("id")
+	comments, err := h.movieService.GetMovieComments(id)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err,
+		})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"comments": comments,
+	})
+}
+func (h *movieHandler) GetMovieCharacters(c *gin.Context) {
+	id := c.Param("id")
+	characters, err := h.movieService.GetMovieCharacters(id)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err,
+		})
+		return
+	}
+	c.JSON(http.StatusOK, characters)
 }

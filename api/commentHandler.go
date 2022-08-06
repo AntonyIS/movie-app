@@ -26,7 +26,11 @@ func NewCommentHandler(commentService app.CommentService) CommentHandler {
 }
 
 func (h *commentHandler) CreateComment(c *gin.Context) {
+	movie_id := c.Param("movie_id")
 	var comment app.Comment
+
+	comment.MovieID = movie_id
+	comment.URL = c.Request.Host + c.Request.URL.Path
 
 	if err := c.ShouldBindJSON(&comment); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -42,7 +46,7 @@ func (h *commentHandler) CreateComment(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusCreated, gin.H{
-		"movie": comment,
+		"comemnts": comment,
 	})
 }
 
@@ -69,9 +73,7 @@ func (h *commentHandler) GetComment(c *gin.Context) {
 		})
 		return
 	}
-	c.JSON(http.StatusCreated, gin.H{
-		"comments": comment,
-	})
+	c.JSON(http.StatusCreated, comment)
 }
 
 func (h *commentHandler) UpdateComment(c *gin.Context) {

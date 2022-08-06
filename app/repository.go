@@ -14,6 +14,8 @@ type MovieRepository interface {
 	CreateMovie(c *Movie) (*Movie, error)
 	UpdateMovie(c *Movie) (*Movie, error)
 	DeleteMovie(id string) error
+	GetMovieComments(id string) (*[]Comment, error)
+	GetMovieCharacters(id string) (*[]Character, error)
 }
 
 type CommentRepository interface {

@@ -14,6 +14,8 @@ type MovieService interface {
 	CreateMovie(m *Movie) (*Movie, error)
 	UpdateMovie(m *Movie) (*Movie, error)
 	DeleteMovie(id string) error
+	GetMovieComments(id string) (*[]Comment, error)
+	GetMovieCharacters(id string) (*[]Character, error)
 }
 
 type CommentService interface {

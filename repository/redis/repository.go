@@ -3,7 +3,10 @@ package redis
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
+	"net/http"
+	"os"
 
 	"github.com/AntonyIS/movie-app/app"
 	"github.com/go-redis/redis"
@@ -188,14 +191,14 @@ func (r redisRepository) GetMovie(id string) (*app.Movie, error) {
 		return nil, nil
 	}
 
-	var Movie app.Movie
-	err = json.Unmarshal([]byte(data), &Movie)
+	var movie app.Movie
+	err = json.Unmarshal([]byte(data), &movie)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return &Movie, nil
+	return &movie, nil
 
 }
 
@@ -220,8 +223,8 @@ func (r redisRepository) GetMovies() (*[]app.Movie, error) {
 }
 
 func (r redisRepository) UpdateMovie(m *app.Movie) (*app.Movie, error) {
-	id := fmt.Sprintf("%d", m.ID)
-	data, err := r.Client.HGet("Movies", id).Result()
+
+	data, err := r.Client.HGet("movies", m.ID).Result()
 
 	if err != nil {
 		return nil, err
@@ -247,7 +250,7 @@ func (r redisRepository) UpdateMovie(m *app.Movie) (*app.Movie, error) {
 	if err != nil {
 		log.Fatal("Error adding new Movie")
 	}
-	r.Client.HSet("Movies", id, json)
+	r.Client.HSet("movies", m.ID, json)
 	return &Movie, nil
 
 }
@@ -265,4 +268,84 @@ func (r redisRepository) DeleteMovie(id string) error {
 
 	return nil
 
+}
+
+func (r redisRepository) GetMovieComments(id string) (*[]app.Comment, error) {
+	data, err := r.GetMovie(id)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if err != nil {
+		return nil, err
+	}
+	comments := []app.Comment{}
+	URL := data.Comments
+
+	for _, link := range URL {
+		response, err := http.Get(link)
+
+		comment := app.Comment{}
+		if err != nil {
+			fmt.Print(err.Error())
+			os.Exit(1)
+		}
+
+		res, err := ioutil.ReadAll(response.Body)
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		err = json.Unmarshal(res, &comment)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		comments = append(comments, comment)
+
+	}
+
+	return &comments, nil
+}
+
+func (r redisRepository) GetMovieCharacters(id string) (*[]app.Character, error) {
+	movie, err := r.GetMovie(id)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if err != nil {
+		return nil, err
+	}
+	characters := []app.Character{}
+	URL := movie.Characters
+
+	for _, link := range URL {
+		response, err := http.Get(link)
+
+		character := app.Character{}
+		if err != nil {
+			fmt.Print(err.Error())
+			os.Exit(1)
+		}
+
+		res, err := ioutil.ReadAll(response.Body)
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		err = json.Unmarshal(res, &character)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		characters = append(characters, character)
+
+	}
+
+	return &characters, nil
 }
