@@ -27,24 +27,17 @@ type Character struct {
 }
 
 type Movie struct {
-	Title         string   `json:"title"`
-	EpisodeID     int      `json:"episode_id"`
-	OpeningCrawl  string   `json:"opening_crawl"`
-	Director      string   `json:"director"`
-	Producer      string   `json:"producer"`
-	CharacterURLs []string `json:"characters"`
-	PlanetURLs    []string `json:"planets"`
-	StarshipURLs  []string `json:"starships"`
-	VehicleURLs   []string `json:"vehicles"`
-	SpeciesURLs   []string `json:"species"`
-	Comments      []string `json:"comments"`
-	Created       string   `json:"created"`
-	Edited        string   `json:"edited"`
-	URL           string   `json:"url"`
+	ID           string    `json:"id"`
+	Title        string    `json:"title"`
+	OpeningCrawl string    `json:"opening_crawl"`
+	Comments     []Comment `json:"comments"`
+	Created      string    `json:"created"`
+	Edited       string    `json:"edited"`
 }
 
 type Comment struct {
 	CommentID   string `json:"comment_id" gorm:"type:text"`
+	MovieID     string `json:"movie_id" gorm:"type:text"`
 	Message     string `json:"message" gorm:"type:text"`
 	CommentorIP string `json:"commentor_ip" gorm:"type:text"`
 	Created     string `json:"created" gorm:"type:text"`

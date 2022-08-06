@@ -54,7 +54,7 @@ func (h *movieHandler) GetMovies(c *gin.Context) {
 		})
 		return
 	}
-	c.JSON(http.StatusCreated, gin.H{
+	c.JSON(http.StatusOK, gin.H{
 		"movies": movies,
 	})
 }
@@ -68,7 +68,7 @@ func (h *movieHandler) GetMovie(c *gin.Context) {
 		})
 		return
 	}
-	c.JSON(http.StatusCreated, gin.H{
+	c.JSON(http.StatusOK, gin.H{
 		"movies": movie,
 	})
 }
@@ -90,7 +90,7 @@ func (h *movieHandler) UpdateMovie(c *gin.Context) {
 		})
 		return
 	}
-	c.JSON(http.StatusCreated, gin.H{
+	c.JSON(http.StatusOK, gin.H{
 		"movies": data,
 	})
 }
@@ -103,7 +103,7 @@ func (h *movieHandler) DeleteMovie(c *gin.Context) {
 		})
 		return
 	}
-	c.JSON(http.StatusCreated, gin.H{
+	c.JSON(http.StatusOK, gin.H{
 		"message": "Movie deleted successfuly",
 	})
 

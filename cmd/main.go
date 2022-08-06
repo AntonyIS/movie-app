@@ -23,6 +23,10 @@ func main() {
 	characterService := app.NewCharacterService(characterRepo)
 	characterHandler := handler.NewCharacterHandler(characterService)
 
+	movieRepo := movieRepo()
+	MovieService := app.NewMovieService(movieRepo)
+	movieHandler := handler.NewMovieHandler(MovieService)
+
 	router := gin.Default()
 
 	router.GET("/", func(c *gin.Context) {
@@ -32,7 +36,13 @@ func main() {
 	})
 	router.GET("/characters/seed", func(c *gin.Context) {
 		c.JSON(http.StatusCreated, gin.H{
-			"message": seed.PostCharacters(),
+			"message": seed.SeedCharacters(),
+		})
+	})
+
+	router.GET("/movies/seed", func(c *gin.Context) {
+		c.JSON(http.StatusCreated, gin.H{
+			"message": seed.SeedMovies(),
 		})
 	})
 
@@ -46,6 +56,11 @@ func main() {
 	router.GET("/characters/:id", characterHandler.GetCharacter)
 	router.PUT("/characters/:id", characterHandler.UpdateCharacter)
 	router.DELETE("/characters/:id", characterHandler.DeleteCharacter)
+	router.POST("/movies/", movieHandler.CreateMovie)
+	router.GET("/movies/", movieHandler.GetMovies)
+	router.GET("/movies/:id", movieHandler.GetMovie)
+	router.PUT("/movies/:id", movieHandler.UpdateMovie)
+	router.DELETE("/movies/:id", movieHandler.DeleteMovie)
 	router.Run(port())
 }
 
@@ -59,7 +74,17 @@ func port() string {
 }
 
 func characterRepo() app.CharacterRepository {
-	repo, err := redisCache.NewRedisRepository("redis://localhost:6379")
+	repo, err := redisCache.NewCharacterRedisRepository("redis://localhost:6379")
+
+	if err != nil {
+		log.Fatal("redis server not connected: ", err)
+		return nil
+	}
+	return repo
+}
+
+func movieRepo() app.MovieRepository {
+	repo, err := redisCache.NewMovieRedisRepository("redis://localhost:6379")
 
 	if err != nil {
 		log.Fatal("redis server not connected: ", err)

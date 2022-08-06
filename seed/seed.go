@@ -13,7 +13,7 @@ import (
 	"github.com/teris-io/shortid"
 )
 
-func PostCharacters() interface{} {
+func SeedCharacters() interface{} {
 
 	url := "https://swapi.dev/api/people"
 
@@ -79,6 +79,65 @@ func PostCharacters() interface{} {
 	}
 
 	return results
+}
+
+func SeedMovies() interface{} {
+
+	url := "https://swapi.dev/api/films"
+
+	response, err := http.Get(url)
+
+	if err != nil {
+		fmt.Print(err.Error())
+		os.Exit(1)
+	}
+
+	res, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+	data := string(res)
+
+	var jsonMap map[string]interface{}
+	err = json.Unmarshal([]byte(data), &jsonMap)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	d := jsonMap["results"]
+
+	repo, err := redis.NewRedisClient("redis://localhost:6379")
+
+	if err != nil {
+		log.Fatal("redis server not connected: ", err)
+	}
+	movieData := d.([]interface{})
+
+	movies := []app.Movie{}
+	for _, v := range movieData {
+		rep := v.(map[string]interface{})
+
+		var m app.Movie
+		m.ID = shortid.MustGenerate()
+		m.Title = rep["title"].(string)
+		m.OpeningCrawl = rep["opening_crawl"].(string)
+		m.Comments = []app.Comment{}
+		m.Created = rep["created"].(string)
+		m.Edited = rep["edited"].(string)
+		
+
+		json, err := json.Marshal(m)
+		if err != nil {
+			log.Fatal("Error adding new character")
+		}
+
+		repo.HSet("movies", m.ID, json)
+
+		movies = append(movies, m)
+
+	}
+
+	return movies
 }
 
 func marshal(d []interface{}) []string {

@@ -27,7 +27,17 @@ func NewRedisClient(redisURL string) (*redis.Client, error) {
 	return client, nil
 }
 
-func NewRedisRepository(redisURL string) (app.CharacterRepository, error) {
+func NewCharacterRedisRepository(redisURL string) (app.CharacterRepository, error) {
+	repo := &redisRepository{}
+	client, err := NewRedisClient(redisURL)
+	if err != nil {
+		return nil, errors.Wrap(err, "character.NewRedisReposiory")
+	}
+	repo.Client = client
+	return repo, nil
+}
+
+func NewMovieRedisRepository(redisURL string) (app.MovieRepository, error) {
 	repo := &redisRepository{}
 	client, err := NewRedisClient(redisURL)
 	if err != nil {
@@ -95,7 +105,7 @@ func (r redisRepository) GetCharacters() (*[]app.Character, error) {
 func (r redisRepository) UpdateCharacter(c *app.Character) (*app.Character, error) {
 
 	data, err := r.Client.HGet("characters", c.ID).Result()
-	
+
 	if err != nil {
 		return nil, err
 	}
@@ -139,6 +149,111 @@ func (r redisRepository) UpdateCharacter(c *app.Character) (*app.Character, erro
 
 func (r redisRepository) DeleteCharacter(id string) error {
 	err := r.Client.HDel("characters", id)
+
+	if fmt.Sprintf("%T", err) == "IntCMD" {
+		return nil
+	}
+
+	if err != nil {
+		return nil
+	}
+
+	return nil
+
+}
+
+func (r redisRepository) CreateMovie(m *app.Movie) (*app.Movie, error) {
+	fmt.Println(m)
+	fmt.Println(m.ID)
+	json, err := json.Marshal(m)
+	if err != nil {
+		log.Fatal("Error adding new Movie")
+	}
+	r.Client.HSet("movies", m.ID, json)
+	defer r.Client.Close()
+	return m, nil
+}
+
+func (r redisRepository) GetMovie(id string) (*app.Movie, error) {
+	data, err := r.Client.HGet("movies", id).Result()
+
+	if data == " " {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	if len(data) == 0 {
+		return nil, nil
+	}
+
+	var Movie app.Movie
+	err = json.Unmarshal([]byte(data), &Movie)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &Movie, nil
+
+}
+
+func (r redisRepository) GetMovies() (*[]app.Movie, error) {
+	data, err := r.Client.HGetAll("movies").Result()
+
+	if err != nil {
+		return nil, err
+	}
+
+	movies := []app.Movie{}
+	for _, value := range data {
+		movie := app.Movie{}
+		err := json.Unmarshal([]byte(value), &movie)
+		if err != nil {
+			log.Fatal(err)
+		}
+		movies = append(movies, movie)
+	}
+
+	return &movies, nil
+}
+
+func (r redisRepository) UpdateMovie(m *app.Movie) (*app.Movie, error) {
+	id := fmt.Sprintf("%d", m.ID)
+	data, err := r.Client.HGet("Movies", id).Result()
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(data) == 0 {
+		return nil, nil
+	}
+
+	var Movie app.Movie
+	err = json.Unmarshal([]byte(data), &Movie)
+
+	if err != nil {
+		return nil, err
+	}
+
+	Movie.Title = m.Title
+	Movie.OpeningCrawl = m.OpeningCrawl
+	Movie.Created = m.Created
+	Movie.Edited = m.Edited
+
+	json, err := json.Marshal(m)
+	if err != nil {
+		log.Fatal("Error adding new Movie")
+	}
+	r.Client.HSet("Movies", id, json)
+	return &Movie, nil
+
+}
+
+func (r redisRepository) DeleteMovie(id string) error {
+	err := r.Client.HDel("Movies", id)
 
 	if fmt.Sprintf("%T", err) == "IntCMD" {
 		return nil
