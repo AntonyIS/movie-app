@@ -26,7 +26,7 @@ func postgresDB() *gorm.DB {
 	}
 	host := os.Getenv("HOST")
 	port := "5432"
-	user := "postgres"
+	user := os.Getenv("USER")
 	password := os.Getenv("PASSWORD")
 	dbname := os.Getenv("DBNAME")
 

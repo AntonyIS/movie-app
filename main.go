@@ -14,6 +14,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+func init() {
+	// seed.SeedMovies()
+	// seed.SeedCharacters()
+}
 func main() {
 	commentRepo := commentRepo()
 	commentService := app.NewcommentService(commentRepo)
