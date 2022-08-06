@@ -12,11 +12,11 @@ services:
       - POSTGRES_DB=${DBNAME}
       - POSTGRES_HOST=postgres-movie-app
       - POSTGRES_PORT=5432
-      - REDIS_HOST=redis-todo-app
+      - REDIS_HOST=redis-movie-app
       - REDIS_PORT=6379
     depends_on:
       - postgres-movie-app
-      - redis-todo-app
+      - redis-movie-app
 
   postgres-movie-app:
     image: postgres
@@ -24,5 +24,5 @@ services:
       - POSTGRES_USER=${USER}
       - POSTGRES_PASSWORD=${PASSWORD}
 
-  redis-todo-app:
+  redis-movie-app:
     image: redis
